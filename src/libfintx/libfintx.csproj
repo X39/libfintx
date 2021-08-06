@@ -32,18 +32,4 @@
     <PackageReference Include="System.Security.Cryptography.Xml" Version="5.0.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\LibFinTX.EBICSConfig\LibFinTX.EBICSConfig.csproj" />
-    <ProjectReference Include="..\LibFinTX.Database\LibFinTX.Database.csproj" />
-    <ProjectReference Include="..\LibFinTX.EBICS\LibFinTX.EBICS.csproj" />
-    <ProjectReference Include="..\LibFinTX.FinTSConfig\LibFinTX.FinTSConfig.csproj" />
-    <ProjectReference Include="..\LibFinTX.FinTS\LibFinTX.FinTS.csproj" />
-    <ProjectReference Include="..\LibFinTX.Globals\LibFinTX.Globals.csproj" />
-    <ProjectReference Include="..\LibFinTX.Logger\LibFinTX.Logger.csproj" />
-    <ProjectReference Include="..\LibFinTX.Security\LibFinTX.Security.csproj" />
-    <ProjectReference Include="..\LibFinTX.Sepa\LibFinTX.Sepa.csproj" />
-    <ProjectReference Include="..\LibFinTX.Settings\LibFinTX.Settings.csproj" />
-    <ProjectReference Include="..\LibFinTX.Xml\LibFinTX.Xml.csproj" />
-  </ItemGroup>
-
 </Project>

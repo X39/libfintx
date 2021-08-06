@@ -37,6 +37,9 @@ namespace libfintx.FinTS
         public AccountInformation activeAccount { get; set; }
         public string SystemId { get; internal set; }
         public string HITAB { get; set; }
+        /// <summary>
+        /// Rückmeldung zu Segmenten
+        /// </summary>
         public string HIRMS { get; set; }
         public int HITANS { get; set; }
 

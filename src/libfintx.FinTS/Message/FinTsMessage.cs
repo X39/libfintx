@@ -56,7 +56,7 @@ namespace libfintx.FinTS.Message
         /// <param name="Segments"></param>
         /// /// <param name="HIRMS_TAN"></param>
         /// <param name="SegmentNum"></param>
-        /// /// <param name="SystemID"></param>
+        /// /// <param name="CustomerSystemID"></param>
         /// <returns></returns>
         ///
         /// (iwen65) First redesign to make things easier and more readable. All important params were values that had been stored as properties of the FinTsClient
@@ -66,7 +66,7 @@ namespace libfintx.FinTS.Message
         /// Mostly it will be TLS12 but who knows.
         /// I'm pretty sure the method can be simplified even more. 
         /// 
-        public static string Create(FinTsClient client, int MsgNum, string DialogID, string Segments, string HIRMS_TAN, string SystemID = null)
+        public static string Create(FinTsClient client, int MsgNum, string DialogID, string Segments, string HIRMS_TAN, string CustomerSystemID = null)
         {
 
             int Version = client.ConnectionDetails.HbciVersion;
@@ -75,8 +75,8 @@ namespace libfintx.FinTS.Message
             string PIN = client.ConnectionDetails.Pin ?? throw new NullReferenceException("Pin was not set.");
             int SegmentNum = client.SEGNUM;
 
-            if (SystemID == null)
-                SystemID = client.SystemId; 
+            if (CustomerSystemID == null)
+                CustomerSystemID = client.SystemId; 
 
             if (MsgNum == 0)
                 MsgNum = 1;
@@ -86,6 +86,7 @@ namespace libfintx.FinTS.Message
             var HEAD_LEN = 29;
             var TRAIL_LEN = 11;
 
+            // ToDo: !! REPLACE WITH CRYPTOGRAPHIC METHOD !!
             Random Rnd = new Random();
             int RndNr = Rnd.Next();
 
@@ -95,8 +96,10 @@ namespace libfintx.FinTS.Message
 
             var secRef = Math.Round(Convert.ToDecimal(RndNr.ToString().Replace("-", "")) * 999999 + 1000000);
 
-            string date = Convert.ToString(DateTime.Now.Year) + DateTime.Now.ToString("MM") + DateTime.Now.ToString("dd");
-            string time = Convert.ToString(DateTime.Now.TimeOfDay).Substring(0, 8).Replace(":", "");
+
+            var now = DateTime.Now;
+            var date = now.ToString("yyyyMMdd");
+            var time = now.ToString("HHmmss");
 
             string TAN_ = string.Empty;
 
@@ -115,7 +118,7 @@ namespace libfintx.FinTS.Message
 
             if (Version == Convert.ToInt16(HBCI.v220))
             {
-                encHead = "HNVSK:" + Enc.SECFUNC_ENC_PLAIN + ":2+" + Enc.SECFUNC_ENC_PLAIN + "+1+1::" + SystemID + "+1:" + date + ":" + time + "+2:2:13:@8@00000000:5:1+" + SEG_Country.Germany + ":" + BLZ + ":" + UserID + ":V:0:0+0'";
+                encHead = "HNVSK:" + Enc.SECFUNC_ENC_PLAIN + ":2+" + Enc.SECFUNC_ENC_PLAIN + "+1+1::" + CustomerSystemID + "+1:" + date + ":" + time + "+2:2:13:@8@00000000:5:1+" + SEG_Country.Germany + ":" + BLZ + ":" + UserID + ":V:0:0+0'";
 
                 Log.Write(encHead.Replace(UserID, "XXXXXX"));
 
@@ -123,14 +126,14 @@ namespace libfintx.FinTS.Message
 
                 if (HIRMS_TAN == null)
                 {
-                    sigHead = "HNSHK:2:3+" + Sig.SECFUNC_SIG_PT_2STEP_MIN + "+" + secRef + "+1+1+1::" + SystemID + "+1+1:" + date + ":" + time + "+1:" + Sig.SIGMODE_RETAIL_MAC + ":1 +6:10:16+" + SEG_Country.Germany + ":" + BLZ + ":" + UserID + ":S:0:0'";
+                    sigHead = "HNSHK:2:3+" + Sig.SECFUNC_SIG_PT_2STEP_MIN + "+" + secRef + "+1+1+1::" + CustomerSystemID + "+1+1:" + date + ":" + time + "+1:" + Sig.SIGMODE_RETAIL_MAC + ":1 +6:10:16+" + SEG_Country.Germany + ":" + BLZ + ":" + UserID + ":S:0:0'";
 
                     Log.Write(sigHead.Replace(UserID, "XXXXXX"));
                 }
 
                 else
                 {
-                    sigHead = "HNSHK:2:3+" + HIRMS_TAN + "+" + secRef + "+1+1+1::" + SystemID + "+1+1:" + date + ":" + time + "+1:" + Sig.SIGMODE_RETAIL_MAC + ":1+6:10:16+" + SEG_Country.Germany + ":" + BLZ + ":" + UserID + ":S:0:0'";
+                    sigHead = "HNSHK:2:3+" + HIRMS_TAN + "+" + secRef + "+1+1+1::" + CustomerSystemID + "+1+1:" + date + ":" + time + "+1:" + Sig.SIGMODE_RETAIL_MAC + ":1+6:10:16+" + SEG_Country.Germany + ":" + BLZ + ":" + UserID + ":S:0:0'";
 
                     Log.Write(sigHead.Replace(UserID, "XXXXXX"));
                 }
@@ -152,15 +155,15 @@ namespace libfintx.FinTS.Message
             else if (Version == Convert.ToInt16(HBCI.v300))
             {
                 if (HIRMS_TAN == null)
-                    encHead = "HNVSK:" + Enc.SECFUNC_ENC_PLAIN + ":3+PIN:1+" + Enc.SECFUNC_ENC_PLAIN + "+1+1::" + SystemID + "+1:" + date + ":" + time + "+2:2:13:@8@00000000:5:1+" + SEG_Country.Germany + ":" + BLZ + ":" + UserID + ":V:0:0+0'";
+                    encHead = "HNVSK:" + Enc.SECFUNC_ENC_PLAIN + ":3+PIN:1+" + Enc.SECFUNC_ENC_PLAIN + "+1+1::" + CustomerSystemID + "+1:" + date + ":" + time + "+2:2:13:@8@00000000:5:1+" + SEG_Country.Germany + ":" + BLZ + ":" + UserID + ":V:0:0+0'";
                 else
-                    encHead = "HNVSK:" + Enc.SECFUNC_ENC_PLAIN + ":3+PIN:2+" + Enc.SECFUNC_ENC_PLAIN + "+1+1::" + SystemID + "+1:" + date + ":" + time + "+2:2:13:@8@00000000:5:1+" + SEG_Country.Germany + ":" + BLZ + ":" + UserID + ":V:0:0+0'";
+                    encHead = "HNVSK:" + Enc.SECFUNC_ENC_PLAIN + ":3+PIN:2+" + Enc.SECFUNC_ENC_PLAIN + "+1+1::" + CustomerSystemID + "+1:" + date + ":" + time + "+2:2:13:@8@00000000:5:1+" + SEG_Country.Germany + ":" + BLZ + ":" + UserID + ":V:0:0+0'";
 
                 Log.Write(encHead.Replace(UserID, "XXXXXX"));
 
                 if (HIRMS_TAN == null)
                 {
-                    sigHead = "HNSHK:2:4+PIN:1+" + Sig.SECFUNC_SIG_PT_1STEP + "+" + secRef + "+1+1+1::" + SystemID + "+1+1:" + date + ":" + time + "+1:" + Sig.SIGMODE_RETAIL_MAC + ":1+6:10:16+" + SEG_Country.Germany + ":" + BLZ + ":" + UserID + ":S:0:0'";
+                    sigHead = "HNSHK:2:4+PIN:1+" + Sig.SECFUNC_SIG_PT_1STEP + "+" + secRef + "+1+1+1::" + CustomerSystemID + "+1+1:" + date + ":" + time + "+1:" + Sig.SIGMODE_RETAIL_MAC + ":1+6:10:16+" + SEG_Country.Germany + ":" + BLZ + ":" + UserID + ":S:0:0'";
 
                     Log.Write(sigHead.Replace(UserID, "XXXXXX"));
                 }
@@ -168,7 +171,7 @@ namespace libfintx.FinTS.Message
                 {
                     var SECFUNC = HIRMS_TAN.Equals("999") ? "1" : "2";
 
-                    sigHead = "HNSHK:2:4+PIN:" + SECFUNC + "+" + HIRMS_TAN + "+" + secRef + "+1+1+1::" + SystemID + "+1+1:" + date + ":" + time + "+1:" + Sig.SIGMODE_RETAIL_MAC + ":1+6:10:16+" + SEG_Country.Germany + ":" + BLZ + ":" + UserID + ":S:0:0'";
+                    sigHead = "HNSHK:2:4+PIN:" + SECFUNC + "+" + HIRMS_TAN + "+" + secRef + "+1+1+1::" + CustomerSystemID + "+1+1:" + date + ":" + time + "+1:" + Sig.SIGMODE_RETAIL_MAC + ":1+6:10:16+" + SEG_Country.Germany + ":" + BLZ + ":" + UserID + ":S:0:0'";
 
                     Log.Write(sigHead.Replace(UserID, "XXXXXX"));
                 }
